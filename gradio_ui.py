@@ -10,11 +10,13 @@ TITLE = f'{APP_NAME} Bot'
 
 MIN_YEAR = 2021
 ALL_TITLES_INDICATOR = '[All]'
+UTF_8_ENCODING = 'UTF-8'
 
 # load titles
-file_path = 'db/articles.jsonl'
 
 def _extract_titles() -> list[str]:
+    file_path = 'db/articles.jsonl'
+
     def generate_unique_titles() -> Generator[str, None, None]:
         '''
         Generates unique, cleaned titles from the articles JSONL file, yielding one title at a time.
@@ -29,7 +31,7 @@ def _extract_titles() -> list[str]:
                 None. The generator does not return a specific value upon completion.
         '''
         seen_titles = set()
-        with open(file_path, 'r', encoding='UTF-8') as f:
+        with open(file_path, 'r', encoding=UTF_8_ENCODING) as f:
             for line in f:
                 data = json.loads(line)
                 original_title = data['title']
@@ -46,6 +48,30 @@ def _extract_titles() -> list[str]:
 
 titles = _extract_titles()
 num_titles = len(titles)-1
+
+# load diseases
+
+def _load_diseases() -> list[str]:
+    file_path = 'db/diseases.txt' # should be comma separated list
+
+    with open(file_path, 'r', encoding=UTF_8_ENCODING) as f:
+        diseases: str = f.read()
+    diseases = diseases.replace('\n', ',')
+    diseases: list[str] = diseases.split(',')
+    diseases = [d.strip().replace('diseases', 'disease').replace('disorders', 'disorder') for d in diseases if d.strip()]
+    diseases.sort()
+
+    unique_diseases: list[str] = ['']
+    seen = set()
+    for d in diseases:
+        d_lower = d.lower()
+        if d_lower not in seen:
+            unique_diseases.append(d)
+            seen.add(d_lower)
+
+    return unique_diseases
+
+diseases = _load_diseases()
 
 bulletpt = '\u2022'
 nbsp = '\u00A0'
@@ -72,6 +98,15 @@ def submit_message(message: str, title: str, history: list[tuple[str, str]]) -> 
         answer = ask_question(message, filter)
         history.append((message, answer))
     return history, '' # '' clears the input text box
+
+# disease_dropdown change handler
+def lookup_disease(disease: str, history: list[tuple[str, str]]):
+    if disease:
+        print(f'[disease]: {disease}')
+
+        answer = ask_question(f'List all articles about {disease}. Only include articles which have a "src" field (URL). Articles should NOT be numbered.')
+        history.append((f'Quick lookup: **{disease}**', answer))
+    return history
 
 # retry_button click handler
 def retry_message(title: str, history: list[tuple[str, str]]) -> tuple[list[tuple[str, str]], str]:
@@ -109,16 +144,17 @@ with gr.Blocks(title=TITLE, theme='ocean', css='''
 
     chatbot = gr.Chatbot(
         label='R.Bot',
-        height='65vh',
+        height='55vh',
         show_copy_button=True,
         value=[(None, GREETING)]
     )
 
     with gr.Row(variant='panel'):
         with gr.Column(scale=6):
-            msg = gr.Textbox(autofocus=True, label='Question?', lines=4)
+            msg = gr.Textbox(autofocus=True, label='Question?', lines=7)
         with gr.Column(scale=2):
             title_dropdown = gr.Dropdown(label=f'Title {nbsp}{nbsp}{nbsp}(type-ahead supported :)', choices=titles)
+            disease_dropdown = gr.Dropdown(label=f'Quick Lookup {bulletpt} Disease', choices=diseases, interactive=True)
             send_button = gr.Button('Research It! 📚')
 
     with gr.Row():
@@ -138,5 +174,11 @@ with gr.Blocks(title=TITLE, theme='ocean', css='''
     retry_button.click(retry_message, inputs=[title_dropdown, chatbot], outputs=[chatbot, msg])
     undo_button.click(undo_message, inputs=[chatbot], outputs=[chatbot, msg])
     clear_button.click(clear_messages, outputs=[chatbot, msg, title_dropdown])
+
+    disease_dropdown.change(
+        lookup_disease,
+        inputs=[disease_dropdown, chatbot],
+        outputs=[chatbot]
+    )
 
 demo.launch(server_name='0.0.0.0')
