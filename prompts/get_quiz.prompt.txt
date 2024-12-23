@@ -1,0 +1,23 @@
+Use the important research findings from the article described in the context below to create a multiple choice question to quiz the reader who is a healthcare professional.
+
+Format your response as a JSON object like the example below:
+
+```json
+{{
+    "quiz": {{
+        "question": "Disease C is caused by which pathogen?",
+        "choices": ["a. Bacteria", "b. Virus", "c. Parasite"],
+        "answer": "c. Parasite"
+    }}
+}}
+```
+
+Note that there must be 3 "choices" and they should be labeled "a.", "b.", and "c." like in the example. The "choices" don't need to be single word like in the example; preferably the "choices" are sentences as found in short answers on college exams.
+
+Note that the "answer" value must **exactly** match one of the "choices".
+
+Respond with the JSON object only.
+
+Try to choose which important findings to base your question on randomly so that the reader of the article won't be able to guess what question you will ask. If there is only one important finding in the article, then try to make the answer choices more similar to increase the difficulty of the quiz.
+
+{context}

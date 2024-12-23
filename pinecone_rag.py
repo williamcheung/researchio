@@ -1,6 +1,7 @@
 from dotenv import load_dotenv
 load_dotenv()
 
+import json
 import os
 
 from langchain_community.vectorstores import Pinecone
@@ -15,6 +16,22 @@ PINECONE_INDEX_NAME = os.environ.get('PINECONE_INDEX_NAME')
 
 def ask_question(question: str, filter: dict[str, str]={}, max_docs: int=None) -> str:
     return ask_question_with_prompt_file('question.prompt.txt', question, filter, max_docs)
+
+def get_quiz(title: str) -> dict[str, str|list[str]]:
+    filter = {'title': title}
+    max_docs = None # use default
+    question = title # placeholder only used in log
+    answer = ask_question_with_prompt_file('get_quiz.prompt.txt', question, filter, max_docs)
+    answer = answer.lstrip('```json').rstrip('```')
+    try:
+        answer: dict[str, str|list[str]] = json.loads(answer)['quiz']
+        if not answer.get('question') or not answer.get('choices') or len(answer['choices']) < 3 or not answer.get('answer') or answer['answer'] not in answer['choices']:
+            raise Exception('Invalid quiz')
+        print(f'quiz: {answer}')
+        return answer
+    except Exception as e:
+        print(f'Error: {e}')
+        raise Exception(f'Error getting quiz. Please try again.') # for end user
 
 def ask_question_with_prompt_file(prompt_file: str, question: str, filter: dict[str, str], max_docs: int) -> str:
     vectorstore = Pinecone.from_existing_index(PINECONE_INDEX_NAME,
@@ -65,6 +82,15 @@ def _create_rag_chain(retriever, prompt, model):
 
 if __name__ == '__main__':
     # test usage
+    titles = [
+        'Developing Clinical Risk Prediction Models for Worsening Heart Failure Events and Death by Left Ventricular Ejection Fraction',
+        'Burden of Illness beyond Mortality and Heart Failure Hospitalizations in Patients Newly Diagnosed with Heart Failure in Spain According to Ejection Fraction',
+        'Prevalence, Characteristics, Management and Outcomes of Patients with Heart Failure with Preserved, Mildly Reduced, and Reduced Ejection Fraction in Spain',
+        '20 Years of Real-World Data to Estimate the Prevalence of Heart Failure and Its Subtypes in an Unselected Population of Integrated Care Units'
+    ]
+    for title in titles:
+        quiz = get_quiz(title)
+
     questions = [
        'Summarize research findings on heart failure.',
        'What are current research findings on heart failure?',
