@@ -13,6 +13,8 @@ MIN_YEAR = 2021
 ALL_TITLES_INDICATOR = '[All]'
 UTF_8_ENCODING = 'UTF-8'
 
+CORRECT_ANSWER_SOUND = 'assets/audio/mixkit-correct-answer-reward-952.wav'
+
 # load titles
 
 def _extract_titles() -> list[str]:
@@ -149,7 +151,7 @@ You previously asked the reader the following question so try not to ask it agai
     )
 
 # check_button click handler
-def submit_answer(selected_choice: str, quiz: dict) -> dict:
+def submit_answer(selected_choice: str, quiz: dict) -> tuple[dict, str|None]:
     if not selected_choice:
         return None
 
@@ -159,11 +161,13 @@ def submit_answer(selected_choice: str, quiz: dict) -> dict:
     marked_choices = []
     marked_selection = selected_choice
     marked = False
+    correct = False
     for choice in orig_choices:
         if choice == selected_choice and choice == correct_answer:
             marked_selection = f'☑️{choice}'
             marked_choices.append(marked_selection)
             marked = True
+            correct = True
         elif choice == selected_choice and choice != correct_answer:
             marked_selection = f'❌{choice}'
             marked_choices.append(marked_selection)
@@ -171,8 +175,12 @@ def submit_answer(selected_choice: str, quiz: dict) -> dict:
         else:
             marked_choices.append(choice)
 
-    return gr.update(choices=marked_choices if marked else orig_choices,
-                     value=marked_selection if marked else None)
+    sound_to_play = CORRECT_ANSWER_SOUND if correct else None
+
+    return (gr.update(choices=marked_choices if marked else orig_choices,
+                      value=marked_selection if marked else None),
+            sound_to_play
+    )
 
 with gr.Blocks(title=TITLE, theme='ocean', css='''
     footer {visibility: hidden}
@@ -199,6 +207,7 @@ with gr.Blocks(title=TITLE, theme='ocean', css='''
     )
 
     quiz_state = gr.State({})
+    correct_sound = gr.Audio(visible=False, autoplay=True)
 
     with gr.Row(variant='panel'):
         with gr.Column(scale=6):
@@ -250,7 +259,7 @@ with gr.Blocks(title=TITLE, theme='ocean', css='''
     check_button.click(
         submit_answer,
         inputs=[answer_choices, quiz_state],
-        outputs=answer_choices
+        outputs=[answer_choices, correct_sound]
     )
 
 demo.launch(server_name='0.0.0.0')
