@@ -127,26 +127,34 @@ def clear() -> tuple[list[tuple[str, str]], str, str, str, dict, dict]:
     return [(None, GREETING)], '', ALL_TITLES_INDICATOR, '', gr.update(visible=False, value=None), {}
 
 # quiz_button click handler
-def show_quiz(title: str, history: list[tuple[str, str]]) -> tuple[dict, dict, str, dict, list[tuple[str, str]]]:
+def show_quiz(title: str, history: list[tuple[str, str]], old_quiz: dict) -> tuple[dict, dict, str, dict, list[tuple[str, str]]]:
     if not title or title == ALL_TITLES_INDICATOR:
         history.append(('Quiz me!', 'Please select the **title** of an article to quiz on👇'))
         return gr.update(visible=False), {}, None, None, history
 
-    quiz_state = get_quiz(title)
+    constraint = ''
+    if old_quiz and old_quiz['title'] == title:
+        constraint = f'''
+You previously asked the reader the following question so try not to ask it again:
+"{old_quiz['question']}"
+-- But if you must ask it again since you have no other choice, then reword the question.
+        '''.strip()
+
+    new_quiz = get_quiz(title, constraint)
     return (gr.update(visible=True),
-            quiz_state,
-            quiz_state['question'],
-            gr.update(choices=quiz_state['choices'], value=None),
+            new_quiz,
+            new_quiz['question'],
+            gr.update(choices=new_quiz['choices'], value=None),
             history
     )
 
 # check_button click handler
-def submit_answer(selected_choice: str, quiz_state: dict) -> dict:
+def submit_answer(selected_choice: str, quiz: dict) -> dict:
     if not selected_choice:
         return None
 
-    orig_choices = quiz_state['choices']
-    correct_answer = quiz_state['answer']
+    orig_choices = quiz['choices']
+    correct_answer = quiz['answer']
 
     marked_choices = []
     marked_selection = selected_choice
@@ -235,7 +243,7 @@ with gr.Blocks(title=TITLE, theme='ocean', css='''
 
     quiz_button.click(
         show_quiz,
-        inputs=[title_dropdown, chatbot],
+        inputs=[title_dropdown, chatbot, quiz_state],
         outputs=[quiz_row, quiz_state, quiz_question, answer_choices, chatbot]
     )
 

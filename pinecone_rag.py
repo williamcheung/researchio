@@ -17,16 +17,18 @@ PINECONE_INDEX_NAME = os.environ.get('PINECONE_INDEX_NAME')
 def ask_question(question: str, filter: dict[str, str]={}, max_docs: int=None) -> str:
     return ask_question_with_prompt_file('question.prompt.txt', question, filter, max_docs)
 
-def get_quiz(title: str) -> dict[str, str|list[str]]:
+def get_quiz(title: str, constraint: str='') -> dict[str, str|list[str]]:
+    print(f'get_quiz for: {title}')
     filter = {'title': title}
     max_docs = None # use default
-    question = title # placeholder only used in log
+    question = constraint
     answer = ask_question_with_prompt_file('get_quiz.prompt.txt', question, filter, max_docs)
     answer = answer.lstrip('```json').rstrip('```')
     try:
         answer: dict[str, str|list[str]] = json.loads(answer)['quiz']
         if not answer.get('question') or not answer.get('choices') or len(answer['choices']) < 3 or not answer.get('answer') or answer['answer'] not in answer['choices']:
             raise Exception('Invalid quiz')
+        answer['title'] = title
         print(f'quiz: {answer}')
         return answer
     except Exception as e:
