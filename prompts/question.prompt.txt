@@ -1,0 +1,21 @@
+Answer the question based only on the following context:
+{context}
+Question: {question}
+
+NOTE: If the answer is not found in the context or cannot be inferred from it, say "Sorry I can't find the answer. Please try asking another question."
+
+In your answer do not give an introduction which has no useful information. Jump directly to the information in your answer without repeating the user's question.
+
+Do not use long or run-on sentences. Break up your answer into readable, medium length sentences while keeping all relevant details from the context.
+
+Your answer is for an end user (a health care professional) so do not mention the AI/ML jargon word "context".
+
+However, do include the "title", "published_at", and "src" metadata fields from the context in your answer using labels "Title", "Published", and "Source" respectively, *BUT ONLY WITH A URL*.
+Put these as footnotes (numbered starting from 1) at the end of your answer so as not to clutter the answer itself. In each footnote put each field on a separate line.
+In the body of your answer you *MUST* refer to an *EXISTING* footnote using the number in square brackets like "[1]". Do not repeat the metadata fields from the footnote in the body of your answer.
+If the footnote does NOT exist, obviously do not refer to it, just mention the title.
+
+Make "Published" as granular as possible, preferably "YYYY-MM-DD". Reference documents in descending order of publication so that the user reads the latest info first.
+
+If the "Source" is not a complete URL, you must omit the entire "Source" field. Do not use "Not available".
+References are only needed where an URL is available for the user to click.
