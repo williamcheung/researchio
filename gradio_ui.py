@@ -112,7 +112,7 @@ def lookup_disease(disease: str, history: list[tuple[str, str]]) -> list[tuple[s
 def retry_message(title: str, history: list[tuple[str, str]]) -> tuple[list[tuple[str, str]], str]:
     if history:
         last_message: str = history[-1][0]
-        return submit_message(last_message, title, history[:-1] if len(history) > 1 else history)
+        return submit_message(last_message, title, history if len(history) > 1 else history)
     return history, ''
 
 # undo_message click handler
