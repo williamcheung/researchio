@@ -2,8 +2,9 @@ import gradio as gr
 import json
 import re
 
-from pinecone_rag import ask_question
 from typing import Generator
+
+from pinecone_rag import ask_question, get_quiz
 
 APP_NAME = 'Researchio'
 TITLE = f'{APP_NAME} Bot'
@@ -131,13 +132,7 @@ def show_quiz(title: str, history: list[tuple[str, str]]) -> tuple[dict, dict, s
         history.append(('Quiz me!', 'Please select the **title** of an article to quiz on👇'))
         return gr.update(visible=False), {}, None, None, history
 
-    choices = ['a. Paris', 'b. London', 'c. Berlin']
-    choices = [choice + ' ' + title for choice in choices]
-    quiz_state = {
-        'question': f'What is the capital of France? {title}',
-        'choices': choices,
-        'answer': choices[0]
-    }
+    quiz_state = get_quiz(title)
     return (gr.update(visible=True),
             quiz_state,
             quiz_state['question'],
