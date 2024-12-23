@@ -104,7 +104,7 @@ def lookup_disease(disease: str, history: list[tuple[str, str]]) -> list[tuple[s
     if disease:
         print(f'[disease]: {disease}')
 
-        answer = ask_question(f'List all articles about {disease}. Only include articles which have a "src" field (URL). Articles should NOT be numbered.')
+        answer = ask_question(f'List all articles about {disease}. Only include articles which have a "src" field (URL). Articles should NOT be numbered.', max_docs=5)
         history.append((f'Quick lookup: **{disease}**', answer))
     return history
 
