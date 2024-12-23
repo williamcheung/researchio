@@ -100,7 +100,7 @@ def submit_message(message: str, title: str, history: list[tuple[str, str]]) -> 
     return history, '' # '' clears the input text box
 
 # disease_dropdown change handler
-def lookup_disease(disease: str, history: list[tuple[str, str]]):
+def lookup_disease(disease: str, history: list[tuple[str, str]]) -> list[tuple[str, str]]:
     if disease:
         print(f'[disease]: {disease}')
 
@@ -122,8 +122,54 @@ def undo_message(history: list[tuple[str, str]]) -> tuple[list[tuple[str, str]],
     return history, ''
 
 # clear_button click handler
-def clear_messages() -> tuple[list[tuple[str, str]], str, str]:
-    return [(None, GREETING)], '', None
+def clear() -> tuple[list[tuple[str, str]], str, str, str, dict, dict]:
+    return [(None, GREETING)], '', ALL_TITLES_INDICATOR, '', gr.update(visible=False, value=None), {}
+
+# quiz_button click handler
+def show_quiz(title: str, history: list[tuple[str, str]]) -> tuple[dict, dict, str, dict, list[tuple[str, str]]]:
+    if not title or title == ALL_TITLES_INDICATOR:
+        history.append(('Quiz me!', 'Please select the **title** of an article to quiz on👇'))
+        return gr.update(visible=False), {}, None, None, history
+
+    choices = ['a. Paris', 'b. London', 'c. Berlin']
+    choices = [choice + ' ' + title for choice in choices]
+    quiz_state = {
+        'question': f'What is the capital of France? {title}',
+        'choices': choices,
+        'answer': choices[0]
+    }
+    return (gr.update(visible=True),
+            quiz_state,
+            quiz_state['question'],
+            gr.update(choices=quiz_state['choices'], value=None),
+            history
+    )
+
+# check_button click handler
+def submit_answer(selected_choice: str, quiz_state: dict) -> dict:
+    if not selected_choice:
+        return None
+
+    orig_choices = quiz_state['choices']
+    correct_answer = quiz_state['answer']
+
+    marked_choices = []
+    marked_selection = selected_choice
+    marked = False
+    for choice in orig_choices:
+        if choice == selected_choice and choice == correct_answer:
+            marked_selection = f'☑️{choice}'
+            marked_choices.append(marked_selection)
+            marked = True
+        elif choice == selected_choice and choice != correct_answer:
+            marked_selection = f'❌{choice}'
+            marked_choices.append(marked_selection)
+            marked = True
+        else:
+            marked_choices.append(choice)
+
+    return gr.update(choices=marked_choices if marked else orig_choices,
+                     value=marked_selection if marked else None)
 
 with gr.Blocks(title=TITLE, theme='ocean', css='''
     footer {visibility: hidden}
@@ -149,13 +195,24 @@ with gr.Blocks(title=TITLE, theme='ocean', css='''
         value=[(None, GREETING)]
     )
 
+    quiz_state = gr.State({})
+
     with gr.Row(variant='panel'):
         with gr.Column(scale=6):
             msg = gr.Textbox(autofocus=True, label='Question?', lines=7)
         with gr.Column(scale=2):
             title_dropdown = gr.Dropdown(label=f'Title {nbsp}{nbsp}{nbsp}(type-ahead supported :)', choices=titles)
             disease_dropdown = gr.Dropdown(label=f'Quick Lookup {bulletpt} Disease', choices=diseases, interactive=True)
-            send_button = gr.Button('Research It! 📚')
+            with gr.Row():
+                send_button = gr.Button('Research It! 📚')
+                quiz_button = gr.Button('Quiz Me! 🤔')
+
+    with gr.Row(variant='panel', visible=False) as quiz_row:
+        with gr.Column(scale=2):
+            quiz_question = gr.Textbox(label='Multiple Choice Question', interactive=False, lines=4)
+        with gr.Column(scale=6):
+            answer_choices = gr.Radio(label='Choices', interactive=True)
+            check_button = gr.Button('Submit Answer')
 
     with gr.Row():
         retry_button = gr.Button('Retry')
@@ -173,12 +230,24 @@ with gr.Blocks(title=TITLE, theme='ocean', css='''
     send_button.click(submit_message, inputs=[msg, title_dropdown, chatbot], outputs=[chatbot, msg])
     retry_button.click(retry_message, inputs=[title_dropdown, chatbot], outputs=[chatbot, msg])
     undo_button.click(undo_message, inputs=[chatbot], outputs=[chatbot, msg])
-    clear_button.click(clear_messages, outputs=[chatbot, msg, title_dropdown])
+    clear_button.click(clear, outputs=[chatbot, msg, title_dropdown, disease_dropdown, quiz_row, quiz_state])
 
     disease_dropdown.change(
         lookup_disease,
         inputs=[disease_dropdown, chatbot],
-        outputs=[chatbot]
+        outputs=chatbot
+    )
+
+    quiz_button.click(
+        show_quiz,
+        inputs=[title_dropdown, chatbot],
+        outputs=[quiz_row, quiz_state, quiz_question, answer_choices, chatbot]
+    )
+
+    check_button.click(
+        submit_answer,
+        inputs=[answer_choices, quiz_state],
+        outputs=answer_choices
     )
 
 demo.launch(server_name='0.0.0.0')
