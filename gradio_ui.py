@@ -219,6 +219,42 @@ with gr.Blocks(title=TITLE, theme='ocean', css='''
         border-radius: 8px; /* Rounded corners */
     }
             ''') as demo:
+
+    # JavaScript for text-to-speech
+    tts_js = '''
+    async (text) => {
+        console.log("text: " + text);
+        if (!text) {
+            return;
+        }
+
+        const utterance = new SpeechSynthesisUtterance(text);
+        // Ensure voices are loaded
+        const voices = await new Promise((resolve) => {
+            if (window.speechSynthesis.getVoices().length !== 0) {
+                resolve(window.speechSynthesis.getVoices());
+            } else {
+                window.speechSynthesis.onvoiceschanged = () => {
+                    resolve(window.speechSynthesis.getVoices());
+                };
+            }
+        });
+
+        const femaleVoice = voices.find(voice =>
+            voice.name.toLowerCase().includes("female") ||
+            voice.name.toLowerCase().includes("woman")
+        );
+        // Set the voice if a female voice is found
+        if (femaleVoice) {
+            utterance.voice = femaleVoice;
+        } else {
+            console.log("No female voice found; using default voice.");
+        }
+
+        window.speechSynthesis.speak(utterance);
+    }
+    '''
+
     gr.Markdown(F'<h1 style="text-align:center;">{TITLE}</h1>')
 
     chatbot = gr.Chatbot(
@@ -296,7 +332,7 @@ with gr.Blocks(title=TITLE, theme='ocean', css='''
         show_quiz,
         inputs=[title_dropdown, chatbot, quiz_state],
         outputs=[quiz_row, quiz_state, quiz_question, answer_choices, chatbot]
-    )
+    ).then(None, inputs=quiz_question, outputs=None, js=tts_js)
 
     check_button.click(
         submit_answer,
