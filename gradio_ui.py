@@ -9,6 +9,9 @@ from pinecone_rag import ask_question, get_quiz
 APP_NAME = 'Researchio'
 TITLE = f'{APP_NAME} Bot'
 
+CHATBOX_HEIGHT_NORMAL = '55vh'
+CHATBOX_HEIGHT_REDUCED_DUE_TO_QUIZ = '35vh'
+
 MIN_YEAR = 2021
 ALL_TITLES_INDICATOR = '[All]'
 UTF_8_ENCODING = 'UTF-8'
@@ -125,14 +128,14 @@ def undo_message(history: list[tuple[str, str]]) -> tuple[list[tuple[str, str]],
     return history, ''
 
 # clear_button click handler
-def clear() -> tuple[list[tuple[str, str]], str, str, str, dict, dict]:
-    return [(None, GREETING)], '', ALL_TITLES_INDICATOR, '', gr.update(visible=False, value=None), {}
+def clear() -> tuple[dict, str, str, str, dict, dict]:
+    return gr.update(value=[(None, GREETING)], height=CHATBOX_HEIGHT_NORMAL), '', ALL_TITLES_INDICATOR, '', gr.update(visible=False, value=None), {}
 
 # quiz_button click handler
-def show_quiz(title: str, history: list[tuple[str, str]], old_quiz: dict) -> tuple[dict, dict, str, dict, list[tuple[str, str]]]:
+def show_quiz(title: str, history: list[tuple[str, str]], old_quiz: dict) -> tuple[dict, dict, str, dict, dict]:
     if not title or title == ALL_TITLES_INDICATOR:
         history.append(('Quiz me!', 'Please select the **title** of an article to quiz on👇'))
-        return gr.update(visible=False), {}, None, None, history
+        return gr.update(visible=False), {}, None, None, gr.update(value=history)
 
     constraint = ''
     if old_quiz and old_quiz['title'] == title:
@@ -147,7 +150,7 @@ You previously asked the reader the following question so try not to ask it agai
             new_quiz,
             new_quiz['question'],
             gr.update(choices=new_quiz['choices'], value=None),
-            history
+            gr.update(height=CHATBOX_HEIGHT_REDUCED_DUE_TO_QUIZ)
     )
 
 # check_button click handler
@@ -201,7 +204,7 @@ with gr.Blocks(title=TITLE, theme='ocean', css='''
 
     chatbot = gr.Chatbot(
         label='R.Bot',
-        height='55vh',
+        height=CHATBOX_HEIGHT_NORMAL,
         show_copy_button=True,
         value=[(None, GREETING)]
     )
