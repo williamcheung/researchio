@@ -165,3 +165,5 @@ codealike.json
 # app specific
 data/*
 !data/.gitkeep
+reports/*
+!reports/.gitkeep

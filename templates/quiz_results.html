@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Results for {{ ip_address }}</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            background-color: #f8f9fa; /* Light gray background */
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* More pronounced shadow */
+            padding: 30px; /* Increased padding */
+            max-width: 700px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #343a40; /* Dark gray heading */
+            font-size: 1.8rem; /* Slightly smaller heading */
+            margin-bottom: 2rem; /* Increased margin */
+
+        }
+
+        .quiz-item {
+            margin-bottom: 25px;
+            padding: 20px;
+            border-radius: 8px;
+            background-color: #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.15); /* More defined card shadow */
+            border: 1px solid #e0e0e0; /* Subtle border */
+        }
+
+        .label {
+            font-weight: 600; /* Slightly bolder */
+            color: #495057; /* Darker label color */
+            display: inline-block;
+            margin-right: 8px;
+        }
+
+        .question {
+             font-size: 1.1rem; /* Slightly larger question */
+            margin-bottom: 12px;
+        }
+
+
+        .correct::after {
+            content: " ✅"; /* Heavy checkmark */
+            color: #28a745; /* Brighter green */
+            font-size: 1.2rem; /* Larger checkmark */
+            margin-left: 5px;
+
+        }
+
+        .incorrect::after {
+            content: " ❌"; /* Heavy X mark */
+            color: #dc3545; /* Brighter red */
+            font-size: 1.2rem; /* Larger X mark */
+            margin-left: 5px;
+        }
+
+    </style>
+</head>
+<body>
+   <div class="container">
+    <h1>Quiz Results for {{ ip_address }}</h1>
+
+    {% for quiz in quizzes %}
+        <div class="quiz-item">
+            <p><span class="label">Article:</span> {{ quiz.article }}</p>
+            <p><span class="label">Question:</span> {{ quiz.question }}</p>
+            <p><span class="label">Your Answer:</span> {{ quiz.answer }}</p>
+            <p class="{% if quiz.correct %}correct{% else %}incorrect{% endif %}">
+                {% if quiz.correct %}Correct{% else %}Incorrect{% endif %}
+            </p>
+            <p><span class="label">Time:</span> {{ quiz.formatted_time }}</p>
+        </div>
+    {% endfor %}
+</div>
+
+
+</body>
+</html>
