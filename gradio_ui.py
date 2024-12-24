@@ -1,10 +1,13 @@
 import gradio as gr
 import json
 import re
+import time
 
 from typing import Generator
 
 from pinecone_rag import ask_question, get_quiz
+from user_stats_service import get_user_stats, persist_user_stats
+from utils import get_ip_address
 
 APP_NAME = 'Researchio'
 TITLE = f'{APP_NAME} Bot'
@@ -154,7 +157,7 @@ You previously asked the reader the following question so try not to ask it agai
     )
 
 # check_button click handler
-def submit_answer(selected_choice: str, quiz: dict) -> tuple[dict, str|None]:
+def submit_answer(selected_choice: str, quiz: dict, request: gr.Request) -> tuple[dict, str|None]:
     if not selected_choice:
         return None
 
@@ -179,6 +182,13 @@ def submit_answer(selected_choice: str, quiz: dict) -> tuple[dict, str|None]:
             marked_choices.append(choice)
 
     sound_to_play = CORRECT_ANSWER_SOUND if correct else None
+
+    ip_address = get_ip_address(request)
+    stats = get_user_stats(ip_address)
+    if not stats:
+        stats = {'quizzes': []}
+    stats['quizzes'].append({'article': quiz['title'], 'question': quiz['question'], 'answer': selected_choice, 'correct': correct, 'time': time.time()})
+    persist_user_stats(ip_address, stats)
 
     return (gr.update(choices=marked_choices if marked else orig_choices,
                       value=marked_selection if marked else None),
