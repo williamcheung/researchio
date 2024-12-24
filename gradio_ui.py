@@ -185,6 +185,12 @@ def submit_answer(selected_choice: str, quiz: dict) -> tuple[dict, str|None]:
             sound_to_play
     )
 
+# canned message button click handler
+def append_to_msg(msg: str, canned: str) -> str:
+    if canned in msg:
+        return msg
+    return f'{msg}  {canned}'.strip()
+
 with gr.Blocks(title=TITLE, theme='ocean', css='''
     footer {visibility: hidden}
 
@@ -198,6 +204,14 @@ with gr.Blocks(title=TITLE, theme='ocean', css='''
     /* remove clear button in chatbot */
     button[aria-label="Clear"] {
         display: none !important;
+    }
+
+    #canned-message-btn {
+        background-color: #f0f8ff; /* Light blue */
+        color: #000; /* Black text */
+        border: 1px solid #ccc; /* Subtle border */
+        font-size: 14px; /* Slightly smaller font */
+        border-radius: 8px; /* Rounded corners */
     }
             ''') as demo:
     gr.Markdown(F'<h1 style="text-align:center;">{TITLE}</h1>')
@@ -214,7 +228,27 @@ with gr.Blocks(title=TITLE, theme='ocean', css='''
 
     with gr.Row(variant='panel'):
         with gr.Column(scale=6):
-            msg = gr.Textbox(autofocus=True, label='Question?', lines=7)
+            msg = gr.Textbox(autofocus=True, label='Question?', lines=5)
+
+            with gr.Row(): # row of canned messages
+                gr.HTML('Sample Questions')
+
+                def _create_canned_message_button(label):
+                    button = gr.Button(label, elem_id='canned-message-btn', scale=2)
+                    button.click(append_to_msg,
+                                 inputs=[msg, button],
+                                 outputs=[msg]
+                    )
+                    return button
+                canned_messages = [
+                    'Summarize this article.',
+                    'What are the key findings?',
+                    'What are the clinical implications of this research?',
+                    'What are the limitations of this research?'
+                ]
+                for canned in canned_messages:
+                    _create_canned_message_button(canned)
+
         with gr.Column(scale=2):
             title_dropdown = gr.Dropdown(label=f'Title {nbsp}{nbsp}{nbsp}(type-ahead supported :)', choices=titles)
             disease_dropdown = gr.Dropdown(label=f'Quick Lookup {bulletpt} Disease', choices=diseases, interactive=True)
