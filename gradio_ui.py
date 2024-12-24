@@ -206,6 +206,11 @@ with gr.Blocks(title=TITLE, theme='ocean', css='''
         display: none !important;
     }
 
+    /* avoid truncation on the right on small screen */
+    #canned-message-label {
+        padding-right: 2px;
+    }
+
     #canned-message-btn {
         background-color: #f0f8ff; /* Light blue */
         color: #000; /* Black text */
@@ -231,7 +236,7 @@ with gr.Blocks(title=TITLE, theme='ocean', css='''
             msg = gr.Textbox(autofocus=True, label='Question?', lines=5)
 
             with gr.Row(): # row of canned messages
-                gr.HTML('Sample Questions')
+                gr.HTML('Sample Questions', elem_id='canned-message-label')
 
                 def _create_canned_message_button(label):
                     button = gr.Button(label, elem_id='canned-message-btn', scale=2)
