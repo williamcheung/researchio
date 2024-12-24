@@ -191,6 +191,10 @@ def append_to_msg(msg: str, canned: str) -> str:
         return msg
     return f'{msg}  {canned}'.strip()
 
+# set quiz_question_to_read depending on mute checkbox
+def set_quiz_question_to_read(mute: bool, quiz_question: str) -> str:
+    return None if mute else quiz_question
+
 with gr.Blocks(title=TITLE, theme='ocean', css='''
     footer {visibility: hidden}
 
@@ -300,6 +304,8 @@ with gr.Blocks(title=TITLE, theme='ocean', css='''
     with gr.Row(variant='panel', visible=False) as quiz_row:
         with gr.Column(scale=2):
             quiz_question = gr.Textbox(label='Multiple Choice Question', interactive=False, lines=4)
+            quiz_question_to_read = gr.Textbox(visible=False)
+            mute_checkbox = gr.Checkbox(label='mute', value=False)
         with gr.Column(scale=6):
             answer_choices = gr.Radio(label='Choices', interactive=True)
             check_button = gr.Button('Submit Answer')
@@ -332,7 +338,8 @@ with gr.Blocks(title=TITLE, theme='ocean', css='''
         show_quiz,
         inputs=[title_dropdown, chatbot, quiz_state],
         outputs=[quiz_row, quiz_state, quiz_question, answer_choices, chatbot]
-    ).then(None, inputs=quiz_question, outputs=None, js=tts_js)
+    ).then(set_quiz_question_to_read, inputs=[mute_checkbox, quiz_question], outputs=quiz_question_to_read
+    ).then(None, inputs=quiz_question_to_read, outputs=None, js=tts_js)
 
     check_button.click(
         submit_answer,
