@@ -16,3 +16,11 @@ def get_ip_address(request) -> str:
     print(f'{headers}')
     ip_address: str = headers.get('x-forwarded-for', DUMMY_IP_ADDRESS)
     return ip_address
+
+from datetime import datetime, timezone
+
+def format_timestamp(time_seconds: float) -> str:
+    tz = timezone.utc
+    dt = datetime.fromtimestamp(time_seconds, tz=tz)
+    formatted_time = dt.strftime('%Y-%m-%d %I:%M %p')
+    return f'{formatted_time} {tz.tzname(dt)}'

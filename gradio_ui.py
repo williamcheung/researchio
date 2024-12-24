@@ -7,7 +7,7 @@ from typing import Generator
 
 from pinecone_rag import ask_question, get_quiz
 from user_stats_service import get_user_stats, persist_user_stats
-from utils import get_ip_address
+from utils import format_timestamp, get_ip_address
 
 APP_NAME = 'Researchio'
 TITLE = f'{APP_NAME} Bot'
@@ -187,7 +187,12 @@ def submit_answer(selected_choice: str, quiz: dict, request: gr.Request) -> tupl
     stats = get_user_stats(ip_address)
     if not stats:
         stats = {'quizzes': []}
-    stats['quizzes'].append({'article': quiz['title'], 'question': quiz['question'], 'answer': selected_choice, 'correct': correct, 'time': time.time()})
+
+    time_seconds = time.time()
+    formatted_time = format_timestamp(time_seconds)
+
+    stats['quizzes'].append({'article': quiz['title'], 'question': quiz['question'], 'answer': selected_choice, 'correct': correct, 'time_seconds': int(time_seconds), 'formatted_time': formatted_time})
+
     persist_user_stats(ip_address, stats)
 
     return (gr.update(choices=marked_choices if marked else orig_choices,
