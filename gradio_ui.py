@@ -13,8 +13,8 @@ from utils import format_timestamp, get_ip_address
 APP_NAME = 'Researchio'
 TITLE = f'{APP_NAME} Bot'
 
-CHATBOX_HEIGHT_NORMAL = '55vh'
-CHATBOX_HEIGHT_REDUCED_DUE_TO_QUIZ = '35vh'
+CHATBOX_HEIGHT_NORMAL = '48vh'
+CHATBOX_HEIGHT_REDUCED_DUE_TO_QUIZ = '32vh'
 
 MIN_YEAR = 2021
 ALL_TITLES_INDICATOR = '[All]'
@@ -314,7 +314,8 @@ with gr.Blocks(title=TITLE, theme='ocean', css='''
                     'Summarize this article.',
                     'What are the key findings?',
                     'What are the clinical implications of this research?',
-                    'What are the limitations of this research?'
+                    'What are the limitations of this research?',
+                    'What research methods were used?'
                 ]
                 for canned in canned_messages:
                     _create_canned_message_button(canned)
