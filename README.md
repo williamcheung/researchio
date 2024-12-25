@@ -1,6 +1,6 @@
 # Researchio Deployment Guide
 
-## Create The `.env` file
+## Create the `.env` file
 
 - Copy the `.env.sample` file to a new file named `.env`.
 
