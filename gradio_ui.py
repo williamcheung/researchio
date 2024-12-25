@@ -6,6 +6,7 @@ import time
 from typing import Generator
 
 from pinecone_rag import ask_question, get_quiz
+from progress_report import create_progress_report
 from user_stats_service import get_user_stats, persist_user_stats
 from utils import format_timestamp, get_ip_address
 
@@ -131,8 +132,8 @@ def undo_message(history: list[tuple[str, str]]) -> tuple[list[tuple[str, str]],
     return history, ''
 
 # clear_button click handler
-def clear() -> tuple[dict, str, str, str, dict, dict]:
-    return gr.update(value=[(None, GREETING)], height=CHATBOX_HEIGHT_NORMAL), '', ALL_TITLES_INDICATOR, '', gr.update(visible=False, value=None), {}
+def clear() -> tuple[dict, str, str, str, dict, dict, dict]:
+    return gr.update(value=[(None, GREETING)], height=CHATBOX_HEIGHT_NORMAL), '', ALL_TITLES_INDICATOR, '', gr.update(visible=False, value=None), {}, gr.update(visible=False, value=None)
 
 # quiz_button click handler
 def show_quiz(title: str, history: list[tuple[str, str]], old_quiz: dict) -> tuple[dict, dict, str, dict, dict]:
@@ -199,6 +200,15 @@ def submit_answer(selected_choice: str, quiz: dict, request: gr.Request) -> tupl
                       value=marked_selection if marked else None),
             sound_to_play
     )
+
+# get_report_btn click handler
+def generate_report(request: gr.Request) -> dict:
+    ip_address = get_ip_address(request)
+    stats = get_user_stats(ip_address)
+    if not stats:
+        stats = {'ip_address': ip_address, 'quizzes': []}
+    report_file_path = create_progress_report(stats)
+    return gr.update(value=report_file_path, visible=True)
 
 # canned message button click handler
 def append_to_msg(msg: str, canned: str) -> str:
@@ -315,6 +325,11 @@ with gr.Blocks(title=TITLE, theme='ocean', css='''
             with gr.Row():
                 send_button = gr.Button('Research It! 📚')
                 quiz_button = gr.Button('Quiz Me! 🤔')
+            with gr.Row():
+                get_report_btn = gr.Button('Get Progress Report')
+
+    with gr.Row():
+        report_file = gr.File(label='Progress Report - use link on right ➡️ to download', interactive=False, visible=False)
 
     with gr.Row(variant='panel', visible=False) as quiz_row:
         with gr.Column(scale=2):
@@ -341,7 +356,7 @@ with gr.Blocks(title=TITLE, theme='ocean', css='''
     send_button.click(submit_message, inputs=[msg, title_dropdown, chatbot], outputs=[chatbot, msg])
     retry_button.click(retry_message, inputs=[title_dropdown, chatbot], outputs=[chatbot, msg])
     undo_button.click(undo_message, inputs=[chatbot], outputs=[chatbot, msg])
-    clear_button.click(clear, outputs=[chatbot, msg, title_dropdown, disease_dropdown, quiz_row, quiz_state])
+    clear_button.click(clear, outputs=[chatbot, msg, title_dropdown, disease_dropdown, quiz_row, quiz_state, report_file])
 
     disease_dropdown.change(
         lookup_disease,
@@ -360,6 +375,12 @@ with gr.Blocks(title=TITLE, theme='ocean', css='''
         submit_answer,
         inputs=[answer_choices, quiz_state],
         outputs=[answer_choices, correct_sound]
+    )
+
+    get_report_btn.click(
+        fn=generate_report,
+        inputs=None,
+        outputs=report_file
     )
 
 demo.launch(server_name='0.0.0.0')
