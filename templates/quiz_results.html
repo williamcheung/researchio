@@ -59,7 +59,6 @@
             color: #28a745; /* Brighter green */
             font-size: 1.2rem; /* Larger checkmark */
             margin-left: 5px;
-
         }
 
         .incorrect::after {
@@ -69,10 +68,20 @@
             margin-left: 5px;
         }
 
+        .no-quizzes-message {
+            text-align: center;
+            margin-top: 50px;
+            color: #777;  /*  Slightly muted text color */
+            font-style: italic;
+        }
+
+        .no-quizzes-message p {
+            font-size: 1.2rem;
+        }
     </style>
 </head>
 <body>
-   <div class="container">
+    <div class="container">
     <h1>Quiz Results for {{ ip_address }}</h1>
 
     {% for quiz in quizzes %}
@@ -86,6 +95,12 @@
             <p><span class="label">Time:</span> {{ quiz.formatted_time }}</p>
         </div>
     {% endfor %}
+
+    {% if not quizzes %}
+        <div class="no-quizzes-message">
+            <p>Please do some quizzes to get your report.</p>
+        </div>
+    {% endif %}
 </div>
 
 
